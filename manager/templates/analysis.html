@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 头部样式 */
+        .header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #34495e 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-btn.active {
+            background: var(--primary-color);
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .stat-card.primary {
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .stat-card.success {
+            border-left: 5px solid var(--success-color);
+        }
+
+        .stat-card.warning {
+            border-left: 5px solid var(--warning-color);
+        }
+
+        .stat-card.danger {
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .stat-card.primary .stat-icon { color: var(--primary-color); }
+        .stat-card.success .stat-icon { color: var(--success-color); }
+        .stat-card.warning .stat-icon { color: var(--warning-color); }
+        .stat-card.danger .stat-icon { color: var(--accent-color); }
+
+        .stat-card h3 {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            color: #999;
+            margin-left: 5px;
+        }
+
+        .stat-desc {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 10px;
+        }
+
+        /* 图表区域 */
+        .charts-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .charts-section h2 {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .charts-section h2 i {
+            color: var(--primary-color);
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .chart-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-box {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .chart-box:hover {
+            box-shadow: var(--card-shadow);
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* 无数据提示 */
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .no-data p {
+            font-size: 1.1rem;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card, .chart-box {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chart-box:nth-child(odd) {
+            animation-delay: 0.1s;
+        }
+
+        .chart-box:nth-child(even) {
+            animation-delay: 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-pie"></i> 数据分析面板</h1>
+            <p class="header-subtitle">多维度项目数据分析与可视化</p>
+            <div class="nav">
+                <a href="/" class="nav-btn">
+                    <i class="fas fa-home"></i> 项目列表
+                </a>
+                <a href="/analysis" class="nav-btn active">
+                    <i class="fas fa-chart-bar"></i> 数据分析
+                </a>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <h3>总项目数</h3>
+                <div class="stat-value">
+                    {{ stats.total_projects or 0 }}
+                    <span class="stat-unit">个</span>
+                </div>
+                <p class="stat-desc">系统中共有项目总数</p>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3>总金额</h3>
+                <div class="stat-value">
+                    {{ "%.2f"|format(stats.total_amount or 0) }}
+                    <span class="stat-unit">万元</span>
+                </div>
+                <p class="stat-desc">所有项目合同总额</p>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h3>平均金额</h3>
+                <div class="stat-value">
+                    {{ "%.2f"|format(stats.avg_amount or 0) }}
+                    <span class="stat-unit">万元</span>
+                </div>
+                <p class="stat-desc">单个项目平均金额</p>
+            </div>
+
+            <div class="stat-card danger">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>数据维度</h3>
+                <div class="stat-value">4</div>
+                <p class="stat-desc">图表分析维度数量</p>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <h2><i class="fas fa-industry"></i> 行业分布分析</h2>
+            <div class="chart-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">各行业项目数量</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="industryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-box">
+                    <h3 class="chart-title">各行业金额占比</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="industryAmountChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <h2><i class="fas fa-money-check-alt"></i> 金额分布分析</h2>
+            <div class="chart-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">金额区间项目数量</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-box">
+                    <h3 class="chart-title">金额区间金额分布</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="priceAmountChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <h2><i class="fas fa-tags"></i> 项目类型分析</h2>
+            <div class="chart-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">项目类型TOP10</h3>
+                    <div class="chart-wrapper">
+                        {% if type_data and type_data|length > 0 %}
+                            <canvas id="typeChart"></canvas>
+                        {% else %}
+                            <div class="no-data">
+                                <i class="fas fa-database"></i>
+                                <p>暂无项目类型数据</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <h2><i class="fas fa-calendar-alt"></i> 时间趋势分析</h2>
+            <div class="chart-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">月度项目数量趋势</h3>
+                    <div class="chart-wrapper">
+                        {% if monthly_data and monthly_data|length > 0 %}
+                            <canvas id="monthlyChart"></canvas>
+                        {% else %}
+                            <div class="no-data">
+                                <i class="fas fa-calendar-times"></i>
+                                <p>暂无月度项目数据</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 解析JSON数据
+        const industryData = JSON.parse('{{ industry_data|safe }}');
+        const priceData = JSON.parse('{{ price_data|safe }}');
+        const typeData = JSON.parse('{{ type_data|safe }}');
+        const monthlyData = JSON.parse('{{ monthly_data|safe }}');
+
+        // 颜色生成函数
+        function generateColors(count) {
+            const colors = [
+                '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
+                '#9b59b6', '#1abc9c', '#d35400', '#34495e',
+                '#27ae60', '#8e44ad', '#16a085', '#c0392b'
+            ];
+            return colors.slice(0, count);
+        }
+
+        // 1. 行业分布柱状图
+        if (industryData && industryData.length > 0) {
+            const industryCtx = document.getElementById('industryChart').getContext('2d');
+            new Chart(industryCtx, {
+                type: 'bar',
+                data: {
+                    labels: industryData.map(item => item.category),
+                    datasets: [{
+                        label: '项目数量',
+                        data: industryData.map(item => item.count),
+                        backgroundColor: generateColors(industryData.length),
+                        borderColor: generateColors(industryData.length).map(color => color + 'DD'),
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} 个`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' 个';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 行业金额饼图
+            const industryAmountCtx = document.getElementById('industryAmountChart').getContext('2d');
+            new Chart(industryAmountCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: industryData.map(item => item.category),
+                    datasets: [{
+                        data: industryData.map(item => parseFloat(item.total_amount) || 0),
+                        backgroundColor: generateColors(industryData.length),
+                        borderColor: 'white',
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw.toFixed(2)} 万元`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. 金额分布饼图
+        if (priceData && priceData.length > 0) {
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            new Chart(priceCtx, {
+                type: 'pie',
+                data: {
+                    labels: priceData.map(item => item.price_range),
+                    datasets: [{
+                        data: priceData.map(item => item.count),
+                        backgroundColor: generateColors(priceData.length),
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw} 个项目`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 金额分布柱状图
+            const priceAmountCtx = document.getElementById('priceAmountChart').getContext('2d');
+            new Chart(priceAmountCtx, {
+                type: 'bar',
+                data: {
+                    labels: priceData.map(item => item.price_range),
+                    datasets: [{
+                        label: '金额合计',
+                        data: priceData.map(item => parseFloat(item.total_amount) || 0),
+                        backgroundColor: generateColors(priceData.length),
+                        borderColor: generateColors(priceData.length).map(color => color + 'DD'),
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw.toFixed(2)} 万元`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' 万元';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 3. 项目类型水平柱状图
+        if (typeData && typeData.length > 0) {
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            new Chart(typeCtx, {
+                type: 'bar',
+                data: {
+                    labels: typeData.map(item => item.project_type),
+                    datasets: [{
+                        label: '项目数量',
+                        data: typeData.map(item => item.count),
+                        backgroundColor: generateColors(typeData.length),
+                        borderColor: generateColors(typeData.length).map(color => color + 'DD'),
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} 个`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' 个';
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. 月度趋势折线图
+        if (monthlyData && monthlyData.length > 0) {
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.map(item => item.project_date),
+                    datasets: [{
+                        label: '项目数量',
+                        data: monthlyData.map(item => item.count),
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#3498db',
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} 个项目`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' 个';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
