@@ -81,6 +81,7 @@ with pymysql.connect(host=host, user=user, passwd=password, port=port, db=databa
     # 创建cursor游标
     with conn.cursor() as cursor:
         table_name = 'project_list_zzk_01'
+        cursor.execute("truncate table project_list_zzk_01")
         insert_sql = 'insert into project_list_zzk_01(project_id,project_title, project_hylb, project_xmzl, project_date, project_detail_url) values (%s,%s,%s,%s,%s,%s)'
         for page in range(total_pages):
             requests_form['pageindex'] = str(page)
